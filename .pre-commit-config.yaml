@@ -18,7 +18,7 @@ repos:
         name: isort
         stages: [commit]
         language: system
-        entry: bash -c "isort . --profile black --check"
+        entry: bash -c "isort . --profile black -l 120 --check"
         types: [python]
         verbose: true
         pass_filenames: false
@@ -38,6 +38,6 @@ repos:
         language: system
         entry: bash -c "pytest --mypy-ignore-missing-imports --ignore=venv ."
         types: [python]
-        verbose: true
+        verbose: false
         pass_filenames: false
         always_run: true

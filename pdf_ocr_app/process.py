@@ -9,10 +9,11 @@ import pytesseract
 from pdf2image import convert_from_path, pdfinfo_from_path
 from tqdm import tqdm
 
-from pdf_ocr_app.db.ap import OCRProcessingStep, dump_alto_pages_xml, dump_processing_step, input_pdf_path
+from pdf_ocr_app.config import CONFIG
+from pdf_ocr_app.db import OCRProcessingStep, dump_alto_pages_xml, dump_processing_step, input_pdf_path
+from pdf_ocr_app.utils import safely_replace_path_suffix
 
 _SIMPLE_OCR = 'simple_ocr'
-_AP_EXTRACTION = 'ap_extraction'
 
 
 def _decode(content: Union[str, bytes]) -> str:
@@ -20,7 +21,7 @@ def _decode(content: Union[str, bytes]) -> str:
 
 
 def _tesseract(page: Any) -> str:
-    return _decode(pytesseract.image_to_alto_xml(page, lang='fra'))
+    return _decode(pytesseract.image_to_alto_xml(page, lang=CONFIG.tesseract.lang))
 
 
 def _build_tmp_file() -> str:
@@ -61,28 +62,18 @@ def simple_ocr_on_file(document_id: str) -> None:
 
 
 def _get_src_file() -> str:
-    to_replace = '/pdf_ocr_app/process.py'
-    if not __file__.endswith(to_replace):
-        raise ValueError(f'Expecting __file__ to end with {to_replace}, got {__file__}')
-    return __file__.replace(to_replace, '')
-
-
-_SRC_FILE = _get_src_file()
+    return safely_replace_path_suffix(__file__, '/pdf_ocr_app/process.py', '')
 
 
 def _start_process(document_id: str, mode: str) -> None:
     cmd = ['python3', __file__, '--doc', document_id, '--mode', mode]
     env = os.environ.copy()
-    env['PYTHONPATH'] = _SRC_FILE + ':' + env['PYTHONPATH']
+    env['PYTHONPATH'] = _get_src_file() + ':' + env['PYTHONPATH']
     subprocess.Popen(cmd, env=env)
 
 
 def start_simple_ocr_process(document_id: str) -> None:
     _start_process(document_id, _SIMPLE_OCR)
-
-
-def start_ap_extraction_process(document_id: str) -> None:
-    _start_process(document_id, _AP_EXTRACTION)
 
 
 if __name__ == '__main__':
@@ -92,4 +83,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.mode == _SIMPLE_OCR:
         simple_ocr_on_file(args.doc)
-    raise NotImplementedError(args.mode)
+    else:
+        raise NotImplementedError(args.mode)

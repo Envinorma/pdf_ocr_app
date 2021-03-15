@@ -6,11 +6,12 @@ import numpy as np
 import pytesseract
 from tqdm import tqdm
 
+from pdf_ocr_app.config import CONFIG
 from pdf_ocr_app.models import Cell, Row, Table
 
 
 def _invert_image(img: np.ndarray) -> np.ndarray:
-    _, img_bin = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)  # | cv2.THRESH_OTSU)
+    _, img_bin = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)
     img_bin = 255 - img_bin
     return img_bin
 
@@ -62,9 +63,6 @@ def _extract_contours(img: np.ndarray) -> List[Contour]:
     img_vh_2 = cv2.erode(~img_vh, kernel, iterations=2)
     _, img_vh_3 = cv2.threshold(img_vh_2, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     contours, _ = cv2.findContours(img_vh_3, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # img_debug = cv2.drawContours(img.copy(), contours, -1, (0, 0, 0), 4)
-    # concat = cv2.vconcat([img, img_bin, img_vh, img_vh_2, img_vh_3, img_debug])
-    # cv2.imwrite('test3.png', concat)
     built_contours = [_build_contour(contour) for contour in contours if len(contour) == 4]
     return [ct for ct in built_contours if not _is_empty(ct) and not _is_full_page(ct, img)]
 
@@ -83,7 +81,11 @@ def _str(text: Union[str, bytes]) -> str:
 
 def _extract_string(img, contour: Contour) -> str:
     try:
-        return _str(pytesseract.image_to_string(img[contour.y_0 : contour.y_1, contour.x_0 : contour.x_1], lang='fra'))
+        return _str(
+            pytesseract.image_to_string(
+                img[contour.y_0 : contour.y_1, contour.x_0 : contour.x_1], lang=CONFIG.tesseract.lang
+            )
+        )
     except:
         print(contour)
         print(img.shape)
@@ -317,35 +319,3 @@ def extract_and_remove_tables(image: np.ndarray) -> Tuple[np.ndarray, List[Locat
     grouped_cells = group_by_proximity(cells, _are_neighbor)
     tables = [_build_table(group) for group in grouped_cells]
     return _hide_tables(image, tables), tables
-
-
-if __name__ == '__main__':
-    _RAW_FILENAME = (
-        '/Users/remidelbouys/EnviNorma/ap_sample/pdf_image_workspace/Z_7_8a8d18be65e763f00165e76dcb250007/in.pdf'
-    )
-    from pdf2image import convert_from_path
-
-    page = convert_from_path(_RAW_FILENAME, first_page=2, last_page=2)[0]
-    file_ = 'tmp.png'
-    page.save(file_)
-    img = cv2.imread(file_, 0)
-    img_without_tables, tables = extract_and_remove_tables(img)
-    cv2.imwrite('tmp2.png', img_without_tables)
-
-    # _save_image(_RAW_FILENAME, _FILENAME)
-    # _FILENAME = 'tmpimage.png'
-    # input_image = _load_image(_FILENAME)
-    # image, tables = extract_and_remove_tables(input_image)
-
-    # cv2.imwrite('test.png', image)
-    # input_image = _load_image(_FILENAME)
-
-    # for table in tables:
-    #     input_image = cv2.rectangle(
-    #         input_image,
-    #         (table.v_pos, table.h_pos),
-    #         (table.v_pos + table.width, table.h_pos + table.height),
-    #         (0, 0, 0),
-    #         4,
-    #     )
-    # cv2.imwrite('test2.png', input_image)

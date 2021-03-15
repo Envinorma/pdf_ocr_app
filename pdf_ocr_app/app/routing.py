@@ -6,19 +6,10 @@ from werkzeug.routing import Map, MapAdapter, Rule
 
 
 class Endpoint(Enum):
-    AP_IMAGE = 'ap_image'
+    PDF = 'pdf'
+    OUTPUT = 'output'
     INDEX = 'index'
     TMP = 'tmp'
-
-    def __repr__(self):
-        return self.value
-
-    def __str__(self):
-        return self.value
-
-
-class APOperation(Enum):
-    EDIT_PRESCRIPTIONS = 'edit_prescriptions'
 
     def __repr__(self):
         return self.value
@@ -30,8 +21,9 @@ class APOperation(Enum):
 ROUTER: MapAdapter = Map(
     [
         Rule('/', endpoint=Endpoint.INDEX),
-        Rule(f'/{Endpoint.AP_IMAGE}', endpoint=Endpoint.AP_IMAGE),
+        Rule(f'/{Endpoint.PDF}', endpoint=Endpoint.PDF),
         Rule(f'/{Endpoint.TMP}', endpoint=Endpoint.TMP),
+        Rule(f'/{Endpoint.OUTPUT}/<document_id>', endpoint=Endpoint.OUTPUT),
     ]
 ).bind('')
 

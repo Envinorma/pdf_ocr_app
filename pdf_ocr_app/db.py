@@ -1,33 +1,16 @@
 import json
 import os
 import shutil
-from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional
 
 import alto
 import requests
 
-from pdf_ocr_app.app.utils import write_json
+from pdf_ocr_app.compute import OCRProcessingStep
 from pdf_ocr_app.config import CONFIG
+from pdf_ocr_app.utils import create_folder_if_inexistent, write_json
 
-_DOCS_FOLDER = ''  # CONFIG.storage.ap_data_folder TODO
-
-
-@dataclass
-class OCRProcessingStep:
-    messsage: Optional[str]
-    advancement: float
-    done: bool
-
-    def __post_init__(self) -> None:
-        assert 0 <= self.advancement <= 1
-
-    def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
-
-    @classmethod
-    def from_dict(cls, dict_: Dict[str, Any]) -> 'OCRProcessingStep':
-        return cls(**dict_)
+_DOCS_FOLDER = CONFIG.storage.documents_folder
 
 
 def _document_folder(document_id: str) -> str:
@@ -38,24 +21,12 @@ def _step_path(document_id: str) -> str:
     return os.path.join(_document_folder(document_id), 'step.json')
 
 
-def _ap_extraction_step_path(document_id: str) -> str:
-    return os.path.join(_document_folder(document_id), 'ap_step.json')
-
-
 def input_pdf_path(document_id: str) -> str:
     return os.path.join(_document_folder(document_id), 'in.pdf')
 
 
 def alto_xml_path(document_id: str) -> str:
     return os.path.join(_document_folder(document_id), 'out.xml')
-
-
-def _get_ap_path(document_id: str) -> str:
-    return os.path.join(_document_folder(document_id), 'ap.json')
-
-
-def ap_odt_path(document_id: str) -> str:
-    return os.path.join(_document_folder(document_id), 'ap.odt')
 
 
 def _load_json(path: str):
@@ -97,11 +68,6 @@ def load_alto_pages(document_id: str) -> List[alto.Page]:
     return [_ensure_one_page_and_get_it(alto.parse(page)) for page in pages]
 
 
-def _create_folder_if_inexistent(folder: str) -> None:
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-
-
 def download_document(url: str, output_filename: str) -> None:
     req = requests.get(url, stream=True)
     if req.status_code == 200:
@@ -118,16 +84,8 @@ def load_document_ids() -> List[str]:
     return [x for x in os.listdir(_DOCS_FOLDER) if _pdf_exists(x)]
 
 
-def _ap_exists(document_id: str) -> bool:
-    return os.path.exists(os.path.join(_DOCS_FOLDER, document_id, 'ap.json'))
-
-
-def load_document_ids_having_ap() -> List[str]:
-    return [x for x in os.listdir(_DOCS_FOLDER) if _ap_exists(x)]
-
-
 def save_document(document_id: str, content: bytes) -> None:
-    _create_folder_if_inexistent(_document_folder(document_id))
+    create_folder_if_inexistent(_document_folder(document_id))
     path = input_pdf_path(document_id)
     with open(path, 'wb') as file_:
         file_.write(content)

@@ -10,24 +10,30 @@ from dash.dependencies import Input, Output
 from dash.development.base_component import Component
 from flask.helpers import send_file
 
-from pdf_ocr_app.app.pages.ap_image import page as ap_image_page
+from pdf_ocr_app.app.pages.output import page as output_page
+from pdf_ocr_app.app.pages.parse import page as parse_page
 from pdf_ocr_app.app.pages.temp_page import page as temp_page
 from pdf_ocr_app.app.routing import ROUTER, Endpoint, Page
 from pdf_ocr_app.config import CONFIG
-from pdf_ocr_app.db.ap import download_document
+from pdf_ocr_app.db import download_document
+from pdf_ocr_app.utils import safely_replace_path_suffix
 
-_FRA_TESS_DATA_URL = 'https://github.com/tesseract-ocr/tessdata/raw/master/fra.traineddata'  # TODO
-_TESSDATA_PREFIX = CONFIG.tesseract.tessdata
+_TESSDATA_URL = CONFIG.tesseract.models_url_template.format(CONFIG.tesseract.lang)
+_TESSDATA_PREFIX = CONFIG.tesseract.tessdata_location
 
 
-def _download_fra_tessdata_if_inexistent():
-    filename = os.path.join(_TESSDATA_PREFIX, 'fra.traineddata')
+def _suffix(text: str) -> str:
+    return text.split('/')[-1]
+
+
+def _download_tessdata_if_inexistent():
+    filename = os.path.join(_TESSDATA_PREFIX, _suffix(_TESSDATA_URL))
     if not os.path.exists(filename):
-        print('Downloading fra.traineddata.')
-        download_document(_FRA_TESS_DATA_URL, filename)
+        print(f'Downloading {_TESSDATA_URL} to {filename}')
+        download_document(_TESSDATA_URL, filename)
 
 
-_download_fra_tessdata_if_inexistent()
+_download_tessdata_if_inexistent()
 
 
 def _header_link(content: str, href: str, target: Optional[str] = None) -> Component:
@@ -37,17 +43,14 @@ def _header_link(content: str, href: str, target: Optional[str] = None) -> Compo
 
 def _get_nav() -> Component:
     nav = html.Span(
-        [
-            _header_link('Accueil', href='/'),
-            _header_link('AP image', href=f'/{Endpoint.AP_IMAGE}'),
-        ],
+        [_header_link('Parse document', href=f'/{Endpoint.PDF}')],
         style={'display': 'inline-block'},
     )
     return nav
 
 
 def _get_page_heading() -> Component:
-    src = '/assets/logo-envinorma.png'
+    src = f'/assets/logo-envinorma.png'
     sticky_style = {
         'padding': '.2em',
         'border-bottom': '1px solid rgba(0,0,0,.1)',
@@ -63,9 +66,12 @@ def _get_page_heading() -> Component:
 
 app = dash.Dash(
     __name__,
-    external_stylesheets=[dbc.themes.BOOTSTRAP, __file__.replace('app.py', 'assets/cpstyle.css')],
+    external_stylesheets=[
+        dbc.themes.BOOTSTRAP,
+        safely_replace_path_suffix(__file__, 'pdf_ocr_app/app/__init__.py', 'assets/style.css'),
+    ],
     suppress_callback_exceptions=True,
-    title='AP Exploration - Envinorma',
+    title='PDF parsing',
     update_title=None,
 )
 
@@ -77,17 +83,13 @@ app.layout = html.Div(
 
 
 def _index_layout() -> Component:
-    links = html.Ul(
-        [
-            html.Li(dcc.Link('TODO', href=f'/')),
-        ]
-    )
-    return html.Div(links)
+    return html.Div()
 
 
 _ENDPOINT_TO_PAGE: Dict[Endpoint, Page] = {
     Endpoint.INDEX: (_index_layout, None),
-    Endpoint.AP_IMAGE: ap_image_page,
+    Endpoint.PDF: parse_page,
+    Endpoint.OUTPUT: output_page,
     Endpoint.TMP: temp_page,
 }
 

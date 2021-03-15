@@ -5,6 +5,8 @@ from enum import Enum
 from functools import lru_cache
 from typing import Type, TypeVar
 
+from pdf_ocr_app.utils import create_folder_if_inexistent
+
 
 class _ConfigError(Exception):
     pass
@@ -16,9 +18,12 @@ def _get_var(section: str, varname: str) -> str:
         return os.environ[env_key]
     config = load_config()
     try:
-        return config[section][varname]
+        res = config[section][varname]
     except KeyError:
         raise _ConfigError(f'Variable {varname} must either be defined in config.ini or in environment.')
+    if not res:
+        raise _ConfigError(f'Variable {varname} cannot be empty.')
+    return res
 
 
 def _key_to_class_name(key: str) -> str:
@@ -40,7 +45,9 @@ def _default_load(cls: Type[T]) -> T:
 
 @dataclass
 class TesseractConfig:
-    tessdata: str
+    tessdata_location: str
+    models_url_template: str
+    lang: str
 
     @classmethod
     def default_load(cls) -> 'TesseractConfig':
@@ -54,10 +61,31 @@ class EnvironmentType(Enum):
 
 @dataclass
 class EnvironmentConfig:
-    type: EnvironmentType
+    type: str
 
     @classmethod
     def default_load(cls) -> 'EnvironmentConfig':
+        res = _default_load(cls)
+        values = {x.value for x in EnvironmentType}
+        assert res.type in values, f'Unexpecting value {res.type} for environment.type (expecting value in {values})'
+        return res
+
+
+@dataclass
+class StorageConfig:
+    documents_folder: str
+
+    @classmethod
+    def default_load(cls) -> 'StorageConfig':
+        return _default_load(cls)
+
+
+@dataclass
+class AppConfig:
+    assets_folder: str
+
+    @classmethod
+    def default_load(cls) -> 'AppConfig':
         return _default_load(cls)
 
 
@@ -65,6 +93,8 @@ class EnvironmentConfig:
 class Config:
     tesseract: TesseractConfig
     environment: EnvironmentConfig
+    storage: StorageConfig
+    app: AppConfig
 
     @classmethod
     def default_load(cls) -> 'Config':
@@ -80,3 +110,6 @@ def load_config() -> ConfigParser:
 
 
 CONFIG = Config.default_load()
+
+
+create_folder_if_inexistent(CONFIG.storage.documents_folder)
