@@ -1,0 +1,52 @@
+# Apply to all files without commiting:
+#   pre-commit run --all-files
+# Update this file:
+#   pre-commit autoupdate
+repos:
+  - repo: local
+    hooks:
+      - id: black
+        name: black
+        stages: [commit]
+        language: system
+        entry: bash -c "black . --check --exclude venv -S -l 120"
+        types: [python]
+        verbose: true
+        pass_filenames: false
+        always_run: true
+      - id: isort
+        name: isort
+        stages: [commit]
+        language: system
+        entry: bash -c "isort . --profile black -l 120 --check"
+        types: [python]
+        verbose: true
+        pass_filenames: false
+        always_run: true
+      - id: pytest
+        name: pytest
+        stages: [commit]
+        language: system
+        entry: bash -c "pytest"
+        types: [python]
+        verbose: true
+        pass_filenames: false
+        always_run: true
+      - id: pytest-mypy
+        name: pytest-mypy
+        stages: [commit]
+        language: system
+        entry: bash -c "pytest --mypy-ignore-missing-imports pdf_ocr_app"
+        types: [python]
+        verbose: false
+        pass_filenames: false
+        always_run: true
+      - id: flake8
+        name: flake8
+        stages: [commit]
+        language: system
+        entry: flake8 pdf_ocr_app --count --verbose --show-source --statistics
+        types: [python]
+        verbose: false
+        pass_filenames: false
+        always_run: true

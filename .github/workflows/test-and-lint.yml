@@ -1,0 +1,54 @@
+name: Test and Lint
+
+on: pull_request
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9]
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+      - name: Install tesseract
+        run: sudo apt-get install -y tesseract-ocr tesseract-ocr-fra
+      - name: Print tesseract version
+        run: echo $(tesseract --version)
+      - name: Install poppler-utils
+        run: sudo apt-get install -y poppler-utils
+      - name: Test with pytest
+        run: |
+          cp config_template.ini config.ini
+          PYTHONPATH="$PYTHONPATH:." pytest pdf_ocr_app/tests/
+      - name: Upload codecov
+        uses: codecov/codecov-action@v1
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+      - name: Lint with flake8
+        run: |
+          flake8 pdf_ocr_app --count --verbose --show-source --statistics
+      - name: Check with black
+        run: |
+          black -S -l 120 --check pdf_ocr_app
