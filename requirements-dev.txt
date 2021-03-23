@@ -7,3 +7,7 @@ pre-commit==2.9.3
 flake8==3.8.4
 mypy==0.800
 pytest-mypy==0.8.0
+pytest-runner>=5.2
+pytest-cov>=2.9.0
+pytest-raises>=0.11
+codecov>=2.1.4
