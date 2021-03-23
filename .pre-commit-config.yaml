@@ -36,7 +36,16 @@ repos:
         name: pytest-mypy
         stages: [commit]
         language: system
-        entry: bash -c "pytest --mypy-ignore-missing-imports --ignore=venv ."
+        entry: bash -c "pytest --mypy-ignore-missing-imports pdf_ocr_app"
+        types: [python]
+        verbose: false
+        pass_filenames: false
+        always_run: true
+      - id: flake8
+        name: flake8
+        stages: [commit]
+        language: system
+        entry: flake8 pdf_ocr_app --count --verbose --show-source --statistics
         types: [python]
         verbose: false
         pass_filenames: false

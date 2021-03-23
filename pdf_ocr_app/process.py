@@ -9,8 +9,9 @@ import pytesseract
 from pdf2image import convert_from_path, pdfinfo_from_path
 from tqdm import tqdm
 
+from pdf_ocr_app.compute import OCRProcessingStep
 from pdf_ocr_app.config import CONFIG
-from pdf_ocr_app.db import OCRProcessingStep, dump_alto_pages_xml, dump_processing_step, input_pdf_path
+from pdf_ocr_app.db import dump_alto_pages_xml, dump_processing_step, dump_svg, input_pdf_path
 from pdf_ocr_app.utils import safely_replace_path_suffix
 
 _SIMPLE_OCR = 'simple_ocr'
@@ -49,15 +50,19 @@ def _ocr_step_callback(document_id: str) -> Callable[[OCRProcessingStep], None]:
 
 
 def simple_ocr_on_file(document_id: str) -> None:
-    _ocr_step_callback(document_id)(OCRProcessingStep(f'Starting OCR.', 0.05, False))
+    if not os.path.exists(input_pdf_path(document_id)):
+        raise ValueError(f'Input pdf not found at path {input_pdf_path(document_id)}.')
+    _ocr_step_callback(document_id)(OCRProcessingStep('OCR en cours.', 0.05, False))
     input_path = input_pdf_path(document_id)
     nb_pages = _nb_pages_in_pdf(input_path)
     result: List[str] = []
     for page_nb in tqdm(range(nb_pages), 'Performing OCR.'):
         result.append(_ocr_page(input_path, page_nb))
-        msg = f'Performing OCR on page {page_nb + 2}/{nb_pages}'
-        _ocr_step_callback(document_id)(OCRProcessingStep(msg, 0.1 + 0.9 * (page_nb + 1) / nb_pages, False))
+        msg = f'OCR en cours de la page {page_nb + 1}/{nb_pages}'
+        adv = min(0.1 + 0.9 * (page_nb + 1) / nb_pages, 1.0)
+        _ocr_step_callback(document_id)(OCRProcessingStep(msg, adv, False))
     dump_alto_pages_xml(result, document_id)
+    dump_svg(result, document_id)
     _ocr_step_callback(document_id)(OCRProcessingStep(None, 1.0, True))
 
 

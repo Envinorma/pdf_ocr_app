@@ -17,7 +17,7 @@ def _upload_component(id_: str) -> Component:
         'margin-bottom': '10px',
         'cursor': 'pointer',
     }
-    return dcc.Upload(id=id_, children=html.Div(['Drag and drop or select file']), style=style, multiple=False)
+    return dcc.Upload(id=id_, children=html.Div(['Selectionner un fichier']), style=style, multiple=False)
 
 
 def _options(options: List[str]) -> List[Dict[str, Any]]:
@@ -35,7 +35,7 @@ def _card(content: Component, title: str) -> Component:
 
 
 def upload_row(upload_id: str, dropdown_id: str, dropdown_options: List[str]) -> Component:
-    col1 = html.Div([html.P('Upload document'), _upload_component(upload_id)])
-    col2 = html.Div([html.P('Or choose a sample document'), _dropdown(dropdown_options, dropdown_id)])
+    col1 = html.Div([html.P('Choisir un document PDF'), _upload_component(upload_id)])
+    col2 = html.Div([html.P('Ou utiliser un document existant'), _dropdown(dropdown_options, dropdown_id)])
     cols = [html.Div(col1, className='col-6'), html.Div(col2, className='col-6')]
-    return _card(html.Div(cols, className='row'), 'Choose file')
+    return _card(html.Div(cols, className='row'), 'Document')

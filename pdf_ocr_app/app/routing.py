@@ -23,7 +23,7 @@ ROUTER: MapAdapter = Map(
         Rule('/', endpoint=Endpoint.INDEX),
         Rule(f'/{Endpoint.PDF}', endpoint=Endpoint.PDF),
         Rule(f'/{Endpoint.TMP}', endpoint=Endpoint.TMP),
-        Rule(f'/{Endpoint.OUTPUT}/<document_id>', endpoint=Endpoint.OUTPUT),
+        Rule(f'/{Endpoint.OUTPUT}', endpoint=Endpoint.OUTPUT),
     ]
 ).bind('')
 

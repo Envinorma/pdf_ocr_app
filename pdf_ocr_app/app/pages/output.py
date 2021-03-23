@@ -1,12 +1,13 @@
-from typing import Any, Dict, List, Optional
+from typing import List
 
 import alto
 import dash
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from dash.development.base_component import Component
+from dash.exceptions import PreventUpdate
+from flask.helpers import send_file
 
 from pdf_ocr_app.app.alto_to_html import (
     alto_page_to_grouped_lines,
@@ -14,20 +15,12 @@ from pdf_ocr_app.app.alto_to_html import (
     alto_page_to_html,
     alto_pages_to_paragraphs,
 )
+from pdf_ocr_app.app.common_ids import DOCUMENT_ID
 from pdf_ocr_app.app.routing import Page
 from pdf_ocr_app.app.utils import generate_id
-from pdf_ocr_app.db import load_alto_pages
+from pdf_ocr_app.db import load_alto_pages, svg_path
 
 _OCR_OUTPUT = generate_id(__file__, 'ocr-output')
-
-
-def _page(document_id: str) -> Component:
-    return html.Div(
-        [
-            html.H1('PDF'),
-            html.Div(_load_and_display_alto(document_id), id=_OCR_OUTPUT),
-        ]
-    )
 
 
 def _explain_word_confidence() -> Component:
@@ -72,8 +65,8 @@ def _top_margin(component: Component) -> Component:
 def _tabs(pages: List[alto.Page]) -> Component:
     return dbc.Tabs(
         [
-            dbc.Tab(_top_margin(_word_confidence_tab(pages)), label='Output 1'),
-            dbc.Tab(_top_margin(_groups_tab(pages)), label='Output 2'),
+            dbc.Tab(_top_margin(_word_confidence_tab(pages)), label='Mots détectés'),
+            dbc.Tab(_top_margin(_groups_tab(pages)), label='Mots et groupes détectés'),
             dbc.Tab(_top_margin(_grouped_by_lines(pages)), label='Regroupement par lignes'),
             dbc.Tab(_top_margin(_grouped_by_paragraphs(pages)), label='Regroupement par paragraphes'),
             dbc.Tab(_top_margin(_raw_text(pages)), label='Texte extrait'),
@@ -82,15 +75,33 @@ def _tabs(pages: List[alto.Page]) -> Component:
     )
 
 
+def _buttons(document_id: str) -> Component:
+    button = html.Button('Télécharger au format SVG', className='btn btn-link')
+    return html.A(button, href=f'/download_svg/{document_id}')
+
+
 def _load_and_display_alto(document_id: str) -> Component:
     pages = load_alto_pages(document_id)
     children = []
+    children.append(_buttons(document_id))
     children.append(_tabs(pages))
     return html.Div(children)
 
 
 def _add_callbacks(app: dash.Dash):
-    pass
+    @app.callback(Output(_OCR_OUTPUT, 'children'), Input(DOCUMENT_ID, 'data'))
+    def load_result(document_id: str) -> Component:
+        if not document_id:
+            raise PreventUpdate
+        return _load_and_display_alto(document_id)
+
+    @app.server.route('/download_svg/<document_id>')
+    def _download(document_id: str):
+        return send_file(svg_path(document_id), as_attachment=True)
+
+
+def _page() -> Component:
+    return html.Div([html.H1('PDF'), html.Div(id=_OCR_OUTPUT)])
 
 
 page: Page = (_page, _add_callbacks)

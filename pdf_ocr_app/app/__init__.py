@@ -1,6 +1,5 @@
 import os
 from typing import Dict, Optional
-from urllib.parse import unquote
 
 import dash
 import dash_bootstrap_components as dbc
@@ -8,8 +7,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash.development.base_component import Component
-from flask.helpers import send_file
 
+from pdf_ocr_app.app.common_ids import DOCUMENT_ID
 from pdf_ocr_app.app.pages.output import page as output_page
 from pdf_ocr_app.app.pages.parse import page as parse_page
 from pdf_ocr_app.app.pages.temp_page import page as temp_page
@@ -43,14 +42,14 @@ def _header_link(content: str, href: str, target: Optional[str] = None) -> Compo
 
 def _get_nav() -> Component:
     nav = html.Span(
-        [_header_link('Parse document', href=f'/{Endpoint.PDF}')],
+        [_header_link('Convertir un document PDF', href=f'/{Endpoint.PDF}')],
         style={'display': 'inline-block'},
     )
     return nav
 
 
 def _get_page_heading() -> Component:
-    src = f'/assets/logo-envinorma.png'
+    src = '/assets/logo-envinorma.png'
     sticky_style = {
         'padding': '.2em',
         'border-bottom': '1px solid rgba(0,0,0,.1)',
@@ -71,13 +70,18 @@ app = dash.Dash(
         safely_replace_path_suffix(__file__, 'pdf_ocr_app/app/__init__.py', 'assets/style.css'),
     ],
     suppress_callback_exceptions=True,
-    title='PDF parsing',
+    title='PDF - Envinorma',
     update_title=None,
 )
 
 
 app.layout = html.Div(
-    [dcc.Location(id='url', refresh=False), _get_page_heading(), html.Div(id='page-content', className='container')],
+    [
+        dcc.Location(id='url', refresh=False),
+        _get_page_heading(),
+        html.Div(id='page-content', className='container'),
+        dcc.Store(id=DOCUMENT_ID, data='', storage_type='local'),
+    ],
     id='layout',
 )
 
@@ -102,11 +106,6 @@ def _route(pathname: str) -> Component:
 @app.callback(Output('page-content', 'children'), [Input('url', 'pathname')])
 def display_page(pathname: str):
     return _route(pathname)
-
-
-@app.server.route('/download/<path:path>')
-def _download(path: str):
-    return send_file(unquote(path), as_attachment=True)
 
 
 for _, _add_callbacks in _ENDPOINT_TO_PAGE.values():

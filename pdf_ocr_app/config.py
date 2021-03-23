@@ -98,7 +98,8 @@ class Config:
 
     @classmethod
     def default_load(cls) -> 'Config':
-        dict_ = {key: globals()[_key_to_class_name(key)].default_load() for key in cls.__dataclass_fields__}  # type: ignore
+        fields = cls.__dataclass_fields__  # type: ignore
+        dict_ = {k: globals()[_key_to_class_name(k)].default_load() for k in fields}
         return cls(**dict_)
 
 

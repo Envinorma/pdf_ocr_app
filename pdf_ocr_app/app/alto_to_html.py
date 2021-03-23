@@ -10,7 +10,7 @@ Sizer = Callable[[float, bool], str]
 def _string_to_component(string: alto.String, sizer: Sizer, filled_blocks: bool) -> Component:
     style = {'position': 'absolute', 'top': sizer(string.vpos, True), 'left': sizer(string.hpos, False)}
     if not filled_blocks:
-        style['background-color'] = f'rgba(255, 0, 0, {1 - string.confidence})'
+        style['background-color'] = 'rgba(255, 0, 0, {1 - string.confidence})'
     return html.Div(string.content, style=style)
 
 
@@ -24,7 +24,7 @@ def _line_border(text_line: alto.TextLine, sizer: Sizer, filled_blocks: bool) ->
         'border': '1px solid rgba(0, 0, 0, 0.5)',
     }
     if filled_blocks:
-        style['background-color'] = f'rgba(150, 150, 255)'
+        style['background-color'] = 'rgba(150, 150, 255)'
     return html.Div('', style=style)
 
 
@@ -38,7 +38,7 @@ def _block_border(block: alto.ComposedBlock, sizer: Sizer, filled_blocks: bool) 
         'border': '1px solid rgba(0, 0, 0, 0.3)',
     }
     if filled_blocks:
-        style['background-color'] = f'rgba(255, 150, 150)'
+        style['background-color'] = 'rgba(255, 150, 150)'
     return html.Div('', style=style)
 
 
@@ -52,7 +52,7 @@ def _text_block_border(block: alto.TextBlock, sizer: Sizer, filled_blocks: bool)
         'border': '1px solid rgba(0, 0, 0, 0.4)',
     }
     if filled_blocks:
-        style['background-color'] = f'rgba(150, 255, 150)'
+        style['background-color'] = 'rgba(150, 255, 150)'
     return html.Div('', style=style)
 
 

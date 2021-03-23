@@ -1,12 +1,13 @@
+alto-xml==0.0.3
 beautifulsoup4==4.8.2
 dash==1.17.0
 dash-bootstrap-components==0.11.1
-tqdm==4.30.0
 Unidecode==1.0.23
 gunicorn==20.0.4
 pdf2image==1.14.0
 lxml==4.6.2
 opencv-python-headless==4.5.1.48
+tesseract-ocr-utils==0.0.4
 pytesseract==0.3.7
 requests==2.25.1
 requests-oauthlib==1.3.0
