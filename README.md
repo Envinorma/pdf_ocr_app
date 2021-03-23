@@ -24,4 +24,12 @@ cp config-template.ini config.ini # Adapt configuration
 python pdf_ocr_app/app/__init__.py # Visit http://127.0.0.1:8050/
 ```
 
+## Deploy on heroku
+
+```bash
+heroku git:remote -a $app_name
+heroku buildpacks:add --index 1 https://github.com/heroku/heroku-buildpack-apt
+git push heroku master
+```
+
 **MIT license**
