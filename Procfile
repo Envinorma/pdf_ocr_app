@@ -1,1 +1,1 @@
-web: gunicorn --pythonpath src src.ap_exploration.app:APP --preload
+web: gunicorn pdf_ocr_app.app:APP --preload
