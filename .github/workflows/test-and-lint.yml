@@ -28,6 +28,7 @@ jobs:
         run: sudo apt-get install -y poppler-utils
       - name: Test with pytest
         run: |
+          cp config_template.ini config.ini
           PYTHONPATH="$PYTHONPATH:." pytest pdf_ocr_app/tests/
       - name: Upload codecov
         uses: codecov/codecov-action@v1

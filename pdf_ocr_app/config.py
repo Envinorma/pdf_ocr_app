@@ -106,7 +106,8 @@ class Config:
 @lru_cache
 def load_config() -> ConfigParser:
     parser = ConfigParser()
-    parser.read('config.ini')
+    if os.path.exists('config.ini'):
+        parser.read('config.ini')
     return parser
 
 
