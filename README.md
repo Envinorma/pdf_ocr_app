@@ -10,7 +10,8 @@ A ready-to-deploy Dash application for parsing PDF files with Tesseract
 - Performs OCR on user uploaded PDF documents
 - Displays low level tesseract-OCR results
 - Enables SVG download
-  [Example app here](https://pdf-envinorma.herokuapp.com/)
+
+[Example app here](https://pdf-envinorma.herokuapp.com/)
 
 ## Quick Start
 
