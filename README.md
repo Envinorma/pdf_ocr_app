@@ -1,4 +1,4 @@
-# OCR utils
+# PDF OCR APP
 
 [![Build Status](https://github.com/envinorma/pdf_ocr_app/workflows/Test%20and%20Lint/badge.svg)](https://github.com/envinorma/pdf_ocr_app/actions)
 [![Code Coverage](https://codecov.io/gh/envinorma/pdf_ocr_app/branch/main/graph/badge.svg)](https://codecov.io/gh/envinorma/pdf_ocr_app)
